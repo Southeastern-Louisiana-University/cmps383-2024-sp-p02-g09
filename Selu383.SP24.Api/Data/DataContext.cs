@@ -10,11 +10,7 @@ public class DataContext : IdentityDbContext<User, Role, int, IdentityUserClaim<
     public DataContext(DbContextOptions<DataContext> options) : base(options)
     {
     }
-
-    public DataContext()
-    {
-    }
-
+ 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
