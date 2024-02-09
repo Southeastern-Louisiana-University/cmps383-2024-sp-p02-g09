@@ -65,19 +65,18 @@ namespace Selu383.SP24.Api.Controllers
         [Authorize]
         public async Task<ActionResult<UserDto>> GetCurrentUser()
         {
-            if (!User.Identity.IsAuthenticated)
+         /*   if (!User.Identity.IsAuthenticated)
             {
-                // Nobody is logged in, return 401 Unauthorized
                 return Unauthorized();
-            }
+            }*/
             var user = User.Identity.Name;
 
-            var resultDto = await GetUDto(_userManager.Users).SingleAsync(x => x.UserName == user);
+            var resultDto = await GetDto(_userManager.Users).SingleAsync(x => x.UserName == user);
 
             return Ok(resultDto);
         }
 
-        private static IQueryable<UserDto> GetUDto(IQueryable<User> users)
+        private static IQueryable<UserDto> GetDto(IQueryable<User> users)
         {
             return users.Select(x => new UserDto
             {
