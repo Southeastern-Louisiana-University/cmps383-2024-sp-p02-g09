@@ -1,7 +1,10 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Selu383.SP24.Api.Data;
 using Selu383.SP24.Api.Features.Hotels;
+using Selu383.SP24.Api.Features.Users;
+using System.Security.Claims;
 
 namespace Selu383.SP24.Api.Controllers;
 
@@ -38,6 +41,7 @@ public class HotelsController : ControllerBase
     }
 
     [HttpPost]
+    [Authorize(Roles ="Admin")]
     public ActionResult<HotelDto> CreateHotel(HotelDto dto)
     {
         if (IsInvalid(dto))
@@ -62,6 +66,7 @@ public class HotelsController : ControllerBase
 
     [HttpPut]
     [Route("{id}")]
+    [Authorize]
     public ActionResult<HotelDto> UpdateHotel(int id, HotelDto dto)
     {
         if (IsInvalid(dto))
@@ -74,9 +79,18 @@ public class HotelsController : ControllerBase
         {
             return NotFound();
         }
+        if (!User.IsInRole("Admin") && GetUserId(User) != hotel.ManagerId)
+        {
+            return Forbid();
+        }
 
         hotel.Name = dto.Name;
         hotel.Address = dto.Address;
+
+        if (User.IsInRole(RoleNames.Admin))
+        {
+            hotel.ManagerId = dto.ManagerId;
+        }
 
         dataContext.SaveChanges();
 
@@ -85,8 +99,11 @@ public class HotelsController : ControllerBase
         return Ok(dto);
     }
 
+  
+
     [HttpDelete]
     [Route("{id}")]
+    [Authorize(Roles ="Admin")]
     public ActionResult DeleteHotel(int id)
     {
         var hotel = hotels.FirstOrDefault(x => x.Id == id);
@@ -119,5 +136,16 @@ public class HotelsController : ControllerBase
                 Address = x.Address,
                 ManagerId=x.ManagerId,
             });
+    }
+    private int? GetUserId(ClaimsPrincipal claimsPrincipal)
+    {
+        var userId = claimsPrincipal.FindFirstValue(ClaimTypes.NameIdentifier);
+
+        if (userId == null)
+        {
+            return null;
+        }
+
+        return int.Parse(userId);
     }
 }
