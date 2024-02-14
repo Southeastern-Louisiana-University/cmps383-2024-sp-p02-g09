@@ -119,10 +119,11 @@ if (app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 
-app.UseAuthorization();
+//app.UseAuthorization();
 
 app
     .UseRouting()
+    .UseAuthorization()
     .UseEndpoints(x =>
      {
          x.MapControllers();
