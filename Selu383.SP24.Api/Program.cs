@@ -1,6 +1,9 @@
+using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Selu383.SP24.Api.Data;
 using Selu383.SP24.Api.Features.Hotels;
+using Selu383.SP24.Api.Features.Users;
+
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -11,7 +14,51 @@ builder.Services.AddControllers();
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
+builder.Services.AddIdentity<User, Role>()
+    .AddEntityFrameworkStores<DataContext>();
+builder.Services.Configure<IdentityOptions>(options =>
+{
+    // Password settings.
+    options.Password.RequireDigit = true;
+    options.Password.RequireLowercase = true;
+    options.Password.RequireNonAlphanumeric = true;
+    options.Password.RequireUppercase = true;
+    options.Password.RequiredLength = 6;
+    options.Password.RequiredUniqueChars = 1;
 
+    // Lockout settings.
+    options.Lockout.DefaultLockoutTimeSpan = TimeSpan.FromMinutes(5);
+    options.Lockout.MaxFailedAccessAttempts = 5;
+    options.Lockout.AllowedForNewUsers = true;
+
+    // User settings.
+    options.User.AllowedUserNameCharacters =
+    "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-._@+";
+    options.User.RequireUniqueEmail = false;
+});
+
+builder.Services.ConfigureApplicationCookie(options =>
+{
+    // Cookie settings
+
+    options.Events.OnRedirectToLogin = context =>
+    {
+        context.Response.StatusCode = 401;
+        return Task.CompletedTask;
+    };
+    options.Events.OnRedirectToAccessDenied = context =>
+    {
+        context.Response.StatusCode = 403;
+        return Task.CompletedTask;
+    };
+    
+    options.Cookie.HttpOnly = true;
+    options.ExpireTimeSpan = TimeSpan.FromMinutes(5);
+
+    options.LoginPath = "/Identity/Account/Login";
+    options.AccessDeniedPath = "/Identity/Account/AccessDenied";
+    options.SlidingExpiration = true;
+});
 var app = builder.Build();
 
 using (var scope = app.Services.CreateScope())
@@ -35,6 +82,32 @@ using (var scope = app.Services.CreateScope())
 
         await db.SaveChangesAsync();
     }
+    var roleManager = scope.ServiceProvider.GetRequiredService<RoleManager<Role>>();
+    var roles = db.Set<Role>();
+    if (!await roles.AnyAsync())
+    {
+        await roleManager.CreateAsync(new Role { Name = "Admin" });
+        await roleManager.CreateAsync(new Role { Name = "User" });
+    }
+
+    var userManager = scope.ServiceProvider.GetRequiredService<UserManager<User>>();
+    var users = db.Set<User>();
+
+    async Task CreateUserAndRole(UserManager<User> userManager, string username, string password, string role)
+    {
+        await userManager.CreateAsync(new User { UserName = username }, password);
+        await userManager.AddToRoleAsync(await userManager.FindByNameAsync(username), role);
+    }
+
+    if (!await users.AnyAsync())
+    {
+        await CreateUserAndRole(userManager, "galkadi", "Password123!","Admin");
+        await CreateUserAndRole(userManager, "bob", "Password123!", "User");
+        await CreateUserAndRole(userManager, "sue", "Password123!", "User");
+    }
+    await db.SaveChangesAsync();
+    
+
 }
 
 // Configure the HTTP request pipeline.
@@ -46,9 +119,31 @@ if (app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 
-app.UseAuthorization();
+//app.UseAuthorization();
 
-app.MapControllers();
+app
+    .UseRouting()
+    .UseAuthorization()
+    .UseEndpoints(x =>
+     {
+         x.MapControllers();
+     });
+
+app.UseStaticFiles();
+
+if (app.Environment.IsDevelopment())
+{
+    app.UseSpa(x =>
+    {
+        x.UseProxyToSpaDevelopmentServer("http://localhost:5173");
+    });
+}
+else
+{
+    app.MapFallbackToFile("/index.html");
+}
+
+/*app.MapControllers();*/
 
 app.Run();
 
