@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Selu383.SP24.Api.Data;
@@ -38,6 +39,7 @@ public class HotelsController : ControllerBase
     }
 
     [HttpPost]
+    [Authorize(Roles ="Admin")]
     public ActionResult<HotelDto> CreateHotel(HotelDto dto)
     {
         if (IsInvalid(dto))
@@ -62,6 +64,7 @@ public class HotelsController : ControllerBase
 
     [HttpPut]
     [Route("{id}")]
+    [Authorize]
     public ActionResult<HotelDto> UpdateHotel(int id, HotelDto dto)
     {
         if (IsInvalid(dto))
@@ -87,6 +90,7 @@ public class HotelsController : ControllerBase
 
     [HttpDelete]
     [Route("{id}")]
+    [Authorize(Roles ="Admin")]
     public ActionResult DeleteHotel(int id)
     {
         var hotel = hotels.FirstOrDefault(x => x.Id == id);
