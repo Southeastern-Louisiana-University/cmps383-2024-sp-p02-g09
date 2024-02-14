@@ -1,0 +1,37 @@
+{
+  "expo": {
+    "name": "Selu383-SP24-Mobile-p02-g09",
+    "slug": "Selu383-SP24-Mobile-p02-g09",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "light",
+    "splash": {
+      "image": "./assets/splash.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#ffffff"
+    },
+    "assetBundlePatterns": [
+      "**/*"
+    ],
+    "ios": {
+      "supportsTablet": true
+    },
+    "android": {
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#ffffff"
+      },
+      "package": "com.selu383.sp24.p02.g09"
+    },
+    "web": {
+      "favicon": "./assets/favicon.png"
+    },
+    "extra": {
+      "eas": {
+        "projectId": "7e3d1713-2e4d-4437-9364-c86cf4924e92"
+      }
+    },
+    "owner": "captainspatula01"
+  }
+}
